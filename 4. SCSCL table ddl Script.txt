@@ -1,0 +1,115 @@
+--data entry for SCSCL
+
+Create Schema SCSCL;
+set search_path to SCSCL;
+
+create table farmers
+(
+	farmer_id VARCHAR(9),
+	farmer_name VARCHAR(20),
+	UID VARCHAR(12),
+	land_area_in_acre DECIMAL(5,2),
+	bank_account VARCHAR(12),
+	village VARCHAR(15),
+	taluka VARCHAR(15),
+	district VARCHAR(15),
+	primary key(farmer_id)	
+);
+create table manager
+(
+	manager_id VARCHAR(2),
+	manager_name VARCHAR(20),
+	district VARCHAR(15),
+	primary key(manager_id)
+);
+create table center
+( 
+	center_id VARCHAR(5),
+	center_name VARCHAR(15),
+	manager_id VARCHAR(2),
+	taluka VARCHAR(15),
+	primary key(center_id),
+	foreign key(manager_id) references manager on update cascade
+);
+create table purchase
+(
+	invoice_no VARCHAR(8),
+	farmer_id VARCHAR(9),
+	center_id VARCHAR(5),
+	invoice_date DATE,
+	season VARCHAR(10),
+	commodity VARCHAR(10),
+	rate_per_quintal DECIMAL(6,2),
+	qty_in_quintal DECIMAL(5,2),
+	payable_amt DECIMAL(10,2),
+	primary key(invoice_no),
+	foreign key (farmer_id) references farmers on update cascade,
+	foreign key (center_id) references Center on update cascade
+);
+create table warehouse
+(
+	warehouse_id VARCHAR(3),
+	warehouse_name VARCHAR(15),
+	manager_id VARCHAR(2),
+	capacity_in_quintal DECIMAL(10,2),
+	primary key(warehouse_id),
+	foreign key(manager_id) references manager on update cascade
+);
+create table employee
+(
+	employee_id VARCHAR(3),
+	employee_name VARCHAR(15),
+	center_id VARCHAR(5),
+	warehouse_id VARCHAR(3),
+	primary key(employee_id),
+	foreign key(center_id) references center on update cascade,
+	foreign key(warehouse_id) references warehouse on update cascade
+);
+create table wh_transport
+(
+	tp_id VARCHAR(5),
+	invoice_no VARCHAR(8),
+	warehouse_id VARCHAR(3),
+	tp_date DATE,
+	commodity VARCHAR(15),
+	qty_in_quintal DECIMAL(7,2),
+	primary key(tp_id, invoice_no),
+	foreign key(warehouse_id) references warehouse on update cascade,
+	foreign key(invoice_no) references purchase on update cascade
+	
+);
+create table shop
+(
+	shop_id VARCHAR(8),
+	shop_name VARCHAR(15),
+	village VARCHAR(15),
+	taluka VARCHAR(15),
+	district VARCHAR(15),
+	primary key(shop_id)
+);
+create table shop_transport 
+(
+	tp_id VARCHAR(5),
+	shop_id VARCHAR(8),
+	warehouse_id VARCHAR(3),
+	tp_date DATE,
+	commodity VARCHAR(15),
+	qty_in_quintal DECIMAL(7,2),
+	primary key(tp_id),
+	foreign key(shop_id) references shop on update cascade,
+	foreign key(warehouse_id) references warehouse on update cascade
+);
+create table stocks
+(
+	warehouse_id VARCHAR(3),
+	date DATE,
+	commodity VARCHAR(15),
+	in_qty_in_quintal DECIMAL(8,2),
+	out_qty_in_quintal DECIMAL(8,2),
+	stock_in_quintal DECIMAL(10,2),
+	foreign key(warehouse_id) references warehouse on update cascade
+);
+
+--if u want to then
+/*update SCSCL.purchase
+set payable_amt = rate_per_quintal*qty_in_quintal*/

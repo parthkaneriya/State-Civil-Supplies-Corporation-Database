@@ -1,0 +1,103 @@
+set search_path to SCSCL;
+--1.  In every year each seasons total purchase.
+select sum(qty_in_quintal) as total_qty from purchase where commodity= 'Ground Nut' and extract(year from invoice_date)=2019;
+-----------
+--2 In every year total purchase.
+select commodity, sum(qty_in_quintal) as total_qty from purchase where extract(year from invoice_date)=2019 group by commodity;
+------------
+--3. Calculate total quantity of commodity district wise purchased.
+select district,commodity,sum(qty_in_quintal) as total_qty from farmers as f join purchase as p on f.farmer_id=p.farmer_id group by district,commodity order by total_qty asc;
+------------
+--4. Calculate the Avg income of top 5 earning farmer.
+select f.farmer_id,farmer_name, avg(payable_amt) as Avg_income from farmers as f join purchase as p on f.farmer_id=p.farmer_id group by f.farmer_id order by Avg_income desc limit 5;
+------------
+--5. List the farmers having land area more than five acre.
+select * from (select farmer_name, UID, sum(land_area_in_acre) as Total_area from farmers group by UID,farmer_name) as T where Total_area>5;
+------------
+--6. For each commodity,count the number of farmers getting benefitted from SCSCL.
+select commodity, count(farmer_id) from (select distinct farmer_id,commodity from Purchase) as A group by commodity;
+------------
+--7. List the farmers having land in Rajkot.
+select Farmer_id,farmer_name,district from farmers where district = 'Rajkot';
+------------
+--8. List the farmers selling ground nut between 25-oct-2020 and 25-oct-2021.
+select f.farmer_id,farmer_name from farmers as f join purchase as p on f.farmer_id=p.farmer_id where invoice_date between '2020-10-25' and '2021-10-25' and commodity='Ground Nut';
+------------
+--9. how much quantity of pigeon Pea was purchased from a farmer in kharif season of all years.
+select farmer_id,sum(qty_in_quintal) from purchase where commodity = 'Pigeon Pea'  group by farmer_id;
+-------------
+--10. What is total purchase of ground nut in all years.
+select sum(qty_in_quintal) from purchase where commodity = 'Ground Nut' ;
+--------------
+--11. What is the total quantity of each commodity that every center got in 2021.
+select center_id, commodity, sum(qty_in_quintal) FROM purchase where extract(year from invoice_date)=2021 group by center_id , commodity order by center_id;
+--------------
+--12. List the shops in Junagadhg district.
+select shop_name,shop_id from shop where district = 'Junagadh';
+--------------
+--13.    on particular date/season how much quantity sent to the shops
+select s.shop_id,shop_name,sum(qty_in_quintal) from shop as s join shop_transport as t on s.shop_id=t.shop_id where taluka ='Vanthali' and tp_date between '2020-10-25' and '2021-10-25' group by s.shop_id, shop_name;
+--------------
+--14. List of farmer which does not sell their product to scscl.
+select distinct farmer_id from farmers group by farmer_id except (select distinct farmer_id from purchase group by farmer_id );
+--------------
+--15. What are the total number of registrations on uid = '401212347894'.
+select count(farmer_id) as No_of_registration from farmers where uid='401212347894';
+--------------------
+--16. Details of employees working at Olpad-2 center. 
+select employee_id,employee_name,center_name,manager_id,taluka from employee as e join center as c on e.center_id=c.center_id where center_name='Olpad-2';
+--------------------
+--17. Which warehouses are managed by Raj Sharma.
+select * from warehouse as w join manager as m on w.manager_id=m.manager_id where manager_name='Raj Sharma';
+--------------------
+--18. list of employee managed by manager
+select employee_id,employee_name from 
+(select center_id,manager_id from center union select warehouse_id,manager_id from warehouse) 
+as M join 
+(select center_id,employee_id,employee_name from employee union select warehouse_id,employee_id,employee_name from employee) 
+as E on M.center_id = E.center_id where manager_id = '11';
+-------------------
+--19. What is the total quantity of commodity that a shop having id 01041003 gets.     
+select s.shop_id,s.shop_name,st.commodity,sum(qty_in_quintal) as total_quntity from shop as s join shop_transport as st on s.shop_id=st.shop_id where s.shop_id='01041003' group by(s.shop_id,st.commodity);
+-------------------
+--20. List the stock availability on every date in the warehouse having id 281.
+select warehouse_id, date, commodity, stock_in_quintal from stocks where warehouse_id='281' and extract(year from date)=2019;
+-------------------
+--21. What is the stock on 05-May-2019.
+select warehouse_id, commodity, stock_in_quintal from stocks where warehouse_id='281' and date<='2019-05-05' order by date desc limit 1;
+-------------------
+--22. What is the total amount that SCSCL has paid to all the farmers per year.
+select extract(year from invoice_date) as year, sum(payable_amt) as Amount_paid from purchase group by extract(year from invoice_date) order by year;
+-------------------
+--23. What is the total quantity of Ground Nut or Pigeon Pea purchased from a farmer.
+select commodity , sum(qty_in_quintal) as total_purchase from purchase group by commodity;
+------------------
+--24. List the farmers who sell Pigeon Pea but not Ground Nut.
+select  farmer_id from purchase where commodity = 'Pigeon Pea'
+except
+select  farmer_id from purchase where commodity = 'Ground Nut';
+-------------------
+--25. Farmer having id 110112315 transported his commodity to which warehouse.
+select farmer_id,invoice_date,warehouse_id,P.commodity 
+from purchase as P join wh_transport as W on P.invoice_no = W.invoice_no where farmer_id = '110112315';
+--------------------
+--26. List the farmers whose commodities got transported to a warehouse having id 281.
+select distinct f.farmer_id,farmer_name from farmers as f join purchase as p on f.farmer_id=p.farmer_id join wh_transport as wt on p.invoice_no=wt.invoice_no where warehouse_id='281';
+--------------------
+--27. List the farmers who got paid more than 50,000 in 2020.
+select f.farmer_id,f.farmer_name,payable_amt from farmers as f join purchase as p on f.farmer_id=p.farmer_id where payable_amt>50000 and extract(year from invoice_date)='2020';
+--------------------
+--28. Display the date and warehouse on which the stock of Pigeon Pea becomes zero.
+select s.warehouse_id,w.warehouse_name,date from stocks as s join warehouse as w on s.warehouse_id=w.warehouse_id where stock_in_quintal=0 and commodity='Pigeon Pea';
+--------------------
+--29. List the center who have purchased commodities less than 51 quintal.
+select c.center_id,center_name,qty_in_quintal,invoice_date from purchase as p join center as c on p.center_id=c.center_id where commodity='Ground Nut' and season='Kharif' and qty_in_quintal<50;
+-------------------
+--30. Which warehouse has maximum quantity of Pigeon Pea in 2019. 
+select s.warehouse_id,w.warehouse_name,sum(s.in_qty_in_quintal) as total_qty from warehouse as w join stocks as s on w.warehouse_id=s.warehouse_id where commodity='Pigeon Pea' and extract(year from s.date)='2019' group by (s.warehouse_id,w.warehouse_name) order by (total_qty) desc limit 1;
+-------------------
+--31. Which warehouse has minimum quantity of Ground Nut in 2020. 
+select s.warehouse_id,w.warehouse_name,sum(s.in_qty_in_quintal) as total_qty from warehouse as w join stocks as s on w.warehouse_id=s.warehouse_id where commodity='Ground Nut' and extract(year from s.date)='2020' group by (s.warehouse_id,w.warehouse_name) order by (total_qty) asc limit 1;
+-------------------
+--32. Average production of Ground Nut Per acre
+select district,(sum(qty_in_quintal)/sum(land_area_in_acre)) as avg_production_per_acre from farmers as f join purchase as p on f.farmer_id=p.farmer_id where commodity='Ground Nut' group by (district);
